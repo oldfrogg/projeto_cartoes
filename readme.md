@@ -19,10 +19,12 @@ A documentação está disponível via Swagger.
 - Clonar através do
 ```bash
 git clone https://github.com/oldfrogg/projeto-cartoes
-cd projeto-cartoes ```
+cd projeto-cartoes
+```
 
 ### 2 - Instalando as dependências
 - Instalar as dependências necessárias:
+
 ```bash
 npm install
 ```
@@ -96,4 +98,5 @@ http://localhost:3000/api-docs/
 O projeto foi desenvolvido por Jhonatta Tavares.
 
 ## Licença
+
 Licença MIT, portanto, é de livre uso, alteração e publicação.
