@@ -1,0 +1,63 @@
+Para iniciar um novo projeto Node, navego via cmd até o diretório, e:
+> npm init -y
+-y significa Yes
+
+Isso irá criar um package.json
+Alterar o package.json, adicionando abaixo do main:
+"type": "module",
+Isso permitirá eu importar e exportar módulos do projeto utilizando a sintaxe mais moderna do JS.
+
+Agora instalo o nodemon, via cmd, para que ao atualizar o código, o servidor reinicie automaticamente:
+> npm install nodemon
+Vou no packages.json, e, dentro de scripts, adiciono:
+"dev": "nodemon server.js",
+
+Com isso, ao invés de executar com >node server.js, irei executar:
+> npm run dev
+
+Primeiro passo da API é criar o servidor. Na raiz do projeto crio um "server.js".
+Será um servidor local. Posso utilizar um framework, mas agora vou utilizar o node cru:
+
+No server.js:
+import http from "http"; // Nativo do Node. Estou criando um servidor local HTTP que simula um servidor online.
+const PORT = 3000;
+const server = http.createServer((req, res) => {
+	res.writeHead(200, { "Content-Type": "text/plain" }); // cabeçalho da resposta. plain é texto simples. Se for um HTML, utilizar text/html. Se um json, application/json, etc...
+	res.end("Curso de Node"); // Texto que será trafegado
+});
+
+server.listen(PORT, () => { //porta 3000
+	console.log("Servidor escutando!")
+});
+
+Para testar, no cmd executo:
+> node server.js, ou
+> npm run dev
+
+Testo no navegador: localhost:3000
+
+
+Agora, para melhorar, após PORT, crio um objeto na forma de const rotas para definir todas as minhas rotas, e, em res.end, coloco rotas[req.url]. Ficará assim:
+const rotas = { 
+	"/": "Hello, World!"};
+...
+res.end(rotas[req.url]);
+
+req é um parâmetro que recebe uma propriedade chamada url, que vem de
+
+Muitas portas estão associadas a processos específicos, por exemplo:
+    5432 é usada para conexão com serviços do banco de dados PostgreSQL.
+    3306/3307 são usadas em conexões com o banco MySQL.
+    80 é a porta padrão de conexões HTTP, usada pelos navegadores.
+
+Sempre que vamos trabalhar com um projeto em Node.js do zero, uma das primeiras coisas que fazemos é criar um arquivo de configuração utilizando o comando > npm init
+Estes pacotes de código podem ser instalados localmente, estando disponíveis somente para o projeto no qual foi instalado através da pasta node_modules, e globalmente, 
+sendo instalados em um diretório geral do NPM em seu computador e disponibilizados de forma geral, sem a necessidade de instalar separadamente em cada projeto.
+
+
+
+
+
+
+
+

@@ -1,0 +1,66 @@
+No Sequelize (que é para SQL), você não define um "schema", mas sim um modelo que mapeia uma tabela no banco,
+diferente do Mongoose para MongoDB que criamos Schemas para documentos JSON.
+
+Confirmo a instalação ou instalo o sequelize, sequelize-cli e mysql2
+> npm install sequelize sequelize-cli mysql2
+
+COMO FUNCIONARÁ O PROJETO?
+FRONTEND chama routes, passando as queries e dados
+ROTAS (define as rotas HTTP e chama o controller)
+CONTROLLER recebe a requisição (req, res), pega os parâmetros e chama o service correspondente.
+SERVICE valida dados, verifica regras de negócio e chama o repository
+REPOSITORY acessa o BD, centraliza as queries utilizando sequelize ou SQL, e permite isolar o model.
+MODEL define a tabela do banco, colunas, tipos de dados, validações do BD e relacionamentos.
+BD e MySQL recebe os dados traduzidos do Sequelize, executa o que foi solicitado ao BD e retorna os dados
+FLUXO DE VOLTA: DB > MODEL > REPOSITORY > SERVICE > CONTROLLER > CLIENTE
+
+COMO DESENVOLVER?
+0. Instalo o necessário no diretório do projeto ou globalmente: node, express, mysql, sequelize, sequelize-cli
+1. Primeiro planejo o BD, tendo em mente o que meu sistema precisará fazer, planejando as entidades (objetos do mundo real, como cliente, cartão), 
+   os relacionamentos (como se ligam, se é 1->1, 1->N, N->N, etc) e regras do negócio (limites, validações, etc).
+   Se eu quiser fazer meu BD antes, o crio utilizando o MySQL Server e MySQL Workbench
+2. Modelo os modelos (MODELS): pois os utilizarei nos controllers, services, repositorios, etc. Eles definem as entidades do sistema.
+3. Crio os repositories. São a camada de acesso ao BD, CRUD utilizando o Sequelize.
+4. Crio os services, pois eles aplicam as regras de negócio.
+5. Crio os controllers, que recebem as requisições HTTP e chamam os Services.
+6. Crio as rotas: conecto os controllers às rotas.
+7. Atualizo meu app.js, importando express e as rotas.
+8. Verifico meu packages.json, se precisa mexer em algo.
+
+
+
+Para fazer minha conexão com o DB pelo sequelize, crio um arquivo próprio para isso, na pasta config.
+db.js:
+import { Sequelize } from "sequelize";
+const sequelize = new Sequelize('PROJETO_CARTOES', 'root', 'martin2022', {
+    host: 'localhost',
+    dialect: 'mysql'
+});
+export default sequelize;
+
+
+
+Crio um Model Sequelize chamado 'Cliente', mapeando para a tabela 'CLIENTES', definido em tablename no 2º parâmetro
+models/Cliente.js
+import { DataTypes } from "sequelize"; // para poder definir os tipos de dados
+import sequelize from "../config/db"; // importando os dados do DB, definido em db.js
+
+const Cliente = sequelize.define('Cliente', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  nome: { type: DataTypes.STRING(100), allowNull: false },
+  cpf: { type: DataTypes.STRING(11), allowNull: false, unique: true },
+  email: { type: DataTypes.STRING(50), allowNull: false },
+  nascimento: { type: DataTypes.DATEONLY, allowNull: false },
+  limite: { type: DataTypes.DECIMAL(10,2), defaultValue: 0.00 }
+}, {
+  tableName: 'CLIENTES',
+  timestamps: false
+});
+
+module.exports = Cliente;
+
+Esse model é o que usarei para Cliente.create(), Cliente.findAll(), etc.
+Funciona como uma classe JS que representa sua tabela.
+
+
+

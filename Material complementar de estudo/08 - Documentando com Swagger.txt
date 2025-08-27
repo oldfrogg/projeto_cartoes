@@ -1,0 +1,4 @@
+Primeiro instalo o swagger
+> npm install swagger-ui-express
+> npm install @types/swagger-ui-express --save-dev
+> npm install swagger-jsdoc

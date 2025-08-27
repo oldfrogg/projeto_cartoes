@@ -1,0 +1,358 @@
+Agora que já estou craque no CRUD, vamos aprimorar a API.
+
+Dados sensíveis: nomes de usuários, senhas etc. Como utilizá-los sem expô-las a quem não deve?
+
+Irei utilizar as variáveis de ambiente. No Node, utilizo a biblioteca dotenv.
+
+> npm install dotenv
+
+Para verificar se está instalado:
+> npm view dotnet version
+
+Inicio o dotenv onde a aplicação inicia. No meu caso, server.js
+
+server.js:
+import 'dotenv/config' // linha 1
+
+Na raiz do projeto crio um arquivo .env (sem nome mesmo). Boa prática criar as variáveis de ambiente aí com apenas maiúsculas
+No arquivo .gitignore adiciono uma linha com apenas com '.env', sem aspas
+
+.env:
+STRING_CONEXAO_BD = mysql+example://usuario:senha@blablabla.com/
+// no arquivo dbConnect.js, utilizarei mysql.connect(process.env.STRING_CONEXAO_BD);
+
+Para nos auxiliar no manejo e tratamento de erros utilizaremos o eslint
+> npm init @eslint/config
+- checar sintaxe, encontrar problemas e reforçar estilo de código
+- Javascript modules (import/export)
+- Nenhum desses frameworks(nem React, nem Vue)
+- Sem typescript
+- Executar no Node
+- Estilo de código: responder perguntas
+- Formato do arquivo de configuração: JSON
+- Identação: com espaços
+- Aspas: double
+- Quebra de linha: Windows
+- Ponto e vírgula para fechar comandos: sim
+- Instalar dependências eslint: sim
+
+Vi que foi criado um arquivo .eslintrc.json. Dentro dele, dentro de rules, altero em "rules" a "indent" de para 2, já que em JS são 2 espaços na identação
+
+Agora, qualquer arquivo que vejo já está mostrando vários pontos de erro, caso os tenha.
+
+Instalo nas extensões do VS Code o ESLINT da Microsoft 
+
+Para corrigir todos os erros de uma vez (pontos e vírgular, aspas duplas, etc:
+> npx eslint . --fix
+
+Para corrigir automaticamente esses erros sempre que eu salvar um arquivo, abro a paleta de comandos 
+(menu superior > view > command pallete), ou Ctrl + Shift + P, procuro PReferences > Open User Settings (JSON), vai abrir um JSON, e adiciono no final:
+"editor.codeActionsOnSave": {"source.fixAll.eslint": true}
+
+No arquivo .eslintrc.json, em "env", adiciono uma propriedade "node": true
+
+Agora, sempre que eu fizer uma alteração no código e salvar, os "erros" serão corrigidos.
+
+
+Um exemplo tratando 2 erros:
+static listarAutorPorId = async (req, res) => {
+try {
+	const id = req.params.id;
+	const autorResultado = await autores.findById(id);
+
+	if (autorResultado !== null) { //se existir um autor com esse Id
+		res.status(200).send(autorResultado)
+	} else {
+		res.status(404).send({message: "Id do autor não localizado"})
+	} catch (erro) {
+		res.status(500).send({message: "Erro interno do servidor"})
+	}
+}};
+// retorno erro 404 caso autor não exista (not found), e erro 500 em caso de erro do servidor. 400 é bad request.
+// posso fazer vários ifs dentro do catch (erro), para tratar vários erros específicos.
+
+
+Se eu for fazer esse tratamento de erros em todos os métodos, o código ficará bastante extenso. Utilizarei um middleware de erro do Express para me ajudar.
+
+app.js:
+// após routes(app);
+app.use((erro, req, res, next) => {
+	if (erro instanceof mongoose.Error.CastError) {
+	res.status(400).send({message: "Um ou mais dados fornecidos está incorreto!"})
+	} else {
+	res.status(500).send({message: "erro interno do servidor"})
+	}
+});
+// Esse middleware será executado em toda (ou algumas determinadas) requisição feita à API
+// Middleware de erro recebe sempre 4 parâmetros. Ele interceptará qualquer erro lançado na aplicação.
+
+Nos método onde estava utilizando, ou que quero utilizar catch (erro), por ex, o listarAutorPorId, além do req, res, adiciono um parâmetro next.
+autoresController.js:
+static listarAutorPorId = async (req, res, next) => {
+...
+} catch (erro) {
+	next(erro);
+}
+// esse next vai encaminhar o erro obtido pelo controlador e mandar para o middleware de erro.
+// isso vai economizar muitas linhas no meu código. centralizo o tratamento de erros.
+
+Para melhorar a estruturação das pastas, crio, dentro do src, uma pasta chamada middlewares. Dentro dela, um arquivo manipuladorDeErros.js.
+manipuladorDeErros.js:
+function manipuladorDeErros(erro, req, res, next) {
+  	console.log(erro);  // imprime o erro para o desenvolvedor. ajudar a entender qualquer erro que possa ser gerado pela aplicação
+
+	if (erro instanceof mongoose.Error.CastError) { //lembrar de importar o mongoose lá em cima
+	res.status(400).send({message: "Um ou mais dados fornecidos está incorreto!"})
+	} else {
+	res.status(500).send({message: "erro interno do servidor"})
+	}
+}
+export default manipuladorDeErros
+
+No app.js, em app.use(), coloco como argumento apenas manipuladorDeErros, e faço a importação lá em cima do arquivo: import manipuladorDeErros from "./middlewares/manipuladorDeErros.js"
+
+Quando um erro é lançado e não é tratado, ele automaticamente é imprimido no terminal, além de derrubar o nosso servidor.
+
+Erros interessantes a se tratar:
+Cast Error: Dados incorretos
+Validation Error: Nem todos os dados requeridos foram enviados
+
+Dentro do meu manipulador de erros (código acima) posso ir adicionando cada um desses erros no else if:
+else if (erro instanceof mongoose.Error.ValidationError) {
+	res.status(400).send({message: "Houve um erro de validação de dados!"})
+}
+E no último else mantenho o res.status(500).
+
+O erro gerado pelo mongoose (como ex: ValidationError) terá uma propriedade errors, que podemos adentrar:
+console.log(erro.errors)
+
+Assim posso ver as propriedades do erro. No caso do exemplo, estará:
+{ nome: ValidatorError: Path `nome` is required. ..... } 
+Posso pegar esse erro para apresentar ao dev de forma mais amigável.
+antes do res.status(400), colocarei:
+const mensagensErro = Object.values(erro.errors) // Object.values() é uma propriedade do JS para iterar sobre objetos.
+  .map(erro => erro.message) // message é a string vista lá: Path `nome`...
+  .join("; !);
+
+res.status(400).send({message: `Os seguintes erros foram encontrados: ${mensagensErro}`});
+
+Mas apresentar dessa forma pode indicar qual SGBD estou utilizando. Por isso, vamos melhorar isso.
+Então, no Model, em um campo que seja required: true, eu edito e faço o seguinte, exemplo:
+nome: {
+	type: String,
+	required: [true, "O nome é obrigatório!"]
+}
+
+Agora, essa será a mensagem de erro personalizada.
+
+
+Refatorando o manipulador de erros com Classes:
+No /src eu faço um arquivo ErroBase.js
+ErroBase.js:
+class ErroBase extends Error {
+	constructor(message, = "Erro interno do servidor", status = 500) {
+		super();
+		this.message = mensagem;
+		this.status = 500;
+	}
+	enviarResposta(res) {
+		res.status(this.status).send({
+		mensagem: this.message,
+		status: this.status
+		})
+	}
+}
+export default ErroBase;
+
+Agora, no manipulador de errros, no último else, tiro o res.status(500), importo o ErroBase e coloco:
+new ErroBase().envarResposta(res);
+
+Agora, em algum controller, logo no incício do try, faço um throw new Error:
+throw new Error();
+
+Um erro já está bem marcado. Vamos avançar.
+Na pasta /erros faço um arquivo RequisicaoIncorreta.js
+RequisicaoIncorreta.js:
+import ErroBase from "./ErroBase.js";
+
+class RequisicaoIncorreta extends ErroBase {
+	constructor() {
+	super("Um ou mais dados fornecidos estão incorretos", 400);
+	}
+}
+
+export default RequisicaoIncorreta;
+
+Agora faço o mesmo que fiz para o erro base para o erro de requisição incorreta na função manipuladora de erros.
+if (erro instanceof mongoose.Error.CastError) {
+new RequisicaoIncorreta().enviarResposta(res);
+}
+
+Faço o restante para os demais erros.
+ErrorValidacao vai extender RequisicaoIncorreta, pois tem o memso status.
+
+
+
+A ordem em que os middlewares são registrados na aplicação é importante. Se for registrado antes dos métodos dos controladores, seu código será executado primeiro para qualquer requisição.
+Se um middleware enviar uma resposta para o cliente (Como com o método send), o fluxo da requisição encerra nessa resposta, e quaisquer middlewares registrados depois desse não serão executados.
+Afinal, apenas uma resposta pode ser enviada para cada requisição.
+Então, como fazer os próximos middlewares registrados serem executados? Para isso, podemos receber a função next como terceiro parâmetro (“next” significa “próximo”, do inglês).
+Agora, se fizer qualquer requisição para a API, obterei o texto "Código de um novo middleware" no terminal, e os métodos dos controladores voltarão a processar corretamente as respostas para o cliente.
+Isso porque a função next foi executada, assim, será executado o próximo middleware registrado para a rota e o método HTTP solicitados. 
+Dentro de um middleware, se eu não executar a função next e nem enviar uma resposta para o cliente, a requisição ficará em processamento até ser encerrada por causa do longo tempo de espera de resposta do servidor.
+
+Com o método app.use, conferimos como registrar um middleware que é executado em toda requisição para a API. Mas como fazer para registrar um middleware que é executado apenas em uma requisição GET para a rota /livros, por exemplo?
+Para isso, altero o código do novo middleware para o seguinte:
+app.get("/livros", (req, res, next) => {
+  console.log("Middleware registrado no GET da rota /livros");
+  next();
+});
+
+Alteramos o método use para o método get. Agora, seu primeiro parâmetro é a string "/livros" e o segundo parâmetro é a função middleware. Se você fizer uma requisição GET para essa rota no Postman, obterá a frase "Middleware registrado no GET da rota /livros" no terminal, além da lista de livros cadastrados retornada pelo Postman.
+
+Para entender melhor os roteadores registrados, vamos conferir, por exemplo, o arquivo livrosRoutes.js. Nele, temos o seguinte código:
+import express from "express";
+import LivroController from "../controllers/livrosController.js";
+
+const router = express.Router();
+
+router
+  .get("/livros", LivroController.listarLivros)
+  .get("/livros/busca", LivroController.listarLivroPorEditora)
+  .get("/livros/:id", LivroController.listarLivroPorId)
+  .post("/livros", LivroController.cadastrarLivro)
+  .put("/livros/:id", LivroController.atualizarLivro)
+  .delete("/livros/:id", LivroController.excluirLivro);
+
+export default router;  
+
+Nesse arquivo, foi criado um roteador com o código const router = express.Router(). Um roteador do Express basicamente é capaz de registrar um grupo de middlewares para determinadas rotas e métodos HTTP, para proporcionar maior organização na aplicação.
+
+
+Em caso do usuário tentar uma rota inexistente, como /livross, meu código não irá tratar.
+Precisarei de um middleware no meu app.js para tratar esse erro específico.
+Esse middleware deve vir depois do app.use(express.json()) e do routes(app),
+pois quero que ele execute apenas se nenhuma das outras rotas tenha correspondência com a url solicitada.
+
+app.use(manipulador404);
+
+Dentro da pasta /middlewares crio o arquivo manipulador404.js:
+manipulador404.js:
+function manipulador404(req, res, next) {
+	res.status(404).send({mensagem: "Página não encontrada"})
+}
+export default manipulador404;
+
+Importo esse arquivo no app.js!
+
+Testo se está tudo ok, e, estando, ajeito melhor esse código.
+
+Na pasta /erros, crio o arquivo NaoEncontrado.js
+NaoEncontrado.js:
+import ErroBase from "./ErroBase.js";
+class NaoEncontrado extends ErroBase {
+	constructor() {
+	super("Página não encontrada", 404);
+	}
+}
+export default NaoEncontrado;
+
+manipulador404.js, altero a função manipulador404:
+const erro404 = new NaoEncontrado();
+next(erro404); // vai parar diretamente no manipulador de erros
+
+na função manipulador de erros, faço mais um else if:
+} else if (erro instanceof NaoEncontrado) {
+	erro.enviarResposta(res);
+}
+
+Agora, nos controllers que utilizo o res.status(404) (ex: AutorController), excluo essa linha e coloco:
+next(new NaoEncontrado("Id do autor não localizado"); // importo também o erro
+
+Coloco isso onde for necessário, como atualizarAutor.js, excluirAutor.js, e o mesmo para os demais controllers e funções
+
+VALIDAÇÃO DE DADOS
+Eu posso inserir validações nos Schemas:
+numeroPaginas: {
+	type: Number.
+	min: [10, "O número de páginas deve estar entre 10 e 5000. Valor fornecido: {VALUE}."],
+	max: [5000, "O número de páginas deve estar entre 10 e 5000. Valor fornecido: {VALUE}."]
+}
+
+editora: {
+	typer: String,
+	required: [true, "A editora é obrigatória"],
+	enum: {
+	values: ["Editora do Jhonatta", "Editora do Martin"],
+	message: "A editora {VALUE} não é um valor permitido."
+	}
+}
+
+Os validadores utilizados até então são validadores nativos do mongoose.
+Para utilizar validadores personalizados:
+numeroPaginas: { 
+	typer: Number,
+	validate: {
+		(valor) => {
+		return valor >= 10 && valor <= 5000;
+		},
+	message: O número de páginas deve estar entre 10 e 5000. Valor fornecido: {VALUE}." 
+	}
+}
+
+Para saber mais, verificar a documentação do mongoose, na parte de validadores.
+
+Para fazer validações globais, (ex: se há algum caractere em um campo srting), posso fazer o seguinte:
+Crio, dentro de models, um index.js, onde importo os outros models.
+Nesse arquivo, importo também um arquivo validador global, que irei criar também.
+O export dele será:
+export { autores, livros, validadorGlobal }
+
+Nos arquivos controllers, altero as importações para se adequarem ao novo formato, ex:
+import { livros } from "./index.js";
+
+validadorGlobal.js:
+import mongoose from "mongoose";
+
+mongoose.Schema.Types.String.set("validate", {
+	validator: (valor) => valor !== "", // se não for uma string vazia, dá verdadeiro e passa.
+	message: "Um campo em branco foi fornecido." // se for false, vai essa message
+});
+// O set é um método que estarei definindo uma propriedade para todos os campos do tripo string dos modelos
+// A propriedade é 'validate', o valor é o que vem depois.
+
+Posso melhorar ainda mais minha message, informando qual campo não foi fornecido.
+
+message: ({ path }) => `O campo ${path} foi fornecido em branco.`
+
+
+FILTROS
+Para pesquisar livros de uma editora:
+livrosController.js:
+// forneço a editora por query (url) e mostra os livros da editora fornecida
+static listarLivrosPorEditora = async (req, res, next) => {
+	try{
+	const editora = req.query.editora;
+	const livrosResultado = await livros.find({"editora": editora});
+	res.status(200).send(livrosResultado);
+	} catch (erro) {
+	next(erro);
+	}
+}
+
+// Filtro por título do livro
+// Fazer sozinho
+
+
+Estudar expressões regulares (RegEx) e o new RegExp, do JS.
+
+
+
+
+
+
+
+
+
+
+

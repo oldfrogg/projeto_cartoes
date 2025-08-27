@@ -1,0 +1,259 @@
+Após seguir os passos anteriores...
+
+Caso precisar, instalar o Express:
+> npm install express
+
+Crio, dentro da raiz, um diretório 'src', e, dentro dele, um app.js. Pasta onde irão os arquivos da API.
+
+app.js:
+import express from "express";
+
+const app = express();
+
+app.get("/", (req, res) => {
+	res.status(200).send("Hello, World!") // .send porque é um plain. Poderia um .json, caso retornasse um JSON.
+};
+// Passamos ao Express a responsabilidade de criar rotas, ouvir servidor, pegar requisições e respostas, e manejá-las, é o Express.
+export default app; // bem tipo React
+
+Já no meu server.js, tiro o import http, e tudo relacionado.
+
+server.js:
+import app from "./src/app.js";
+...
+app.listen(.....) // troco o server por app.
+// apago o que utiliza http. Agora só ficou o import, const PORT, e app.listen
+
+
+
+Alguns tipos de cabeçalho:
+    host é o domínio do servidor que receberá a requisição.
+    User-agent identifica o cliente, por exemplo, dados do navegador de onde está saindo a requisição.
+    Content-Type é o formato do dado que está sendo enviado no body da requisição, por exemplo JSON, string etc. Confira a lista completa de tipos de dados e como devem ser declarados no header.
+    Authorization são as credenciais de autenticação para acesso a recursos protegidos.
+    Accept especifica o formato de retorno esperado na resposta, por exemplo, JSON.
+
+
+No Body da requisição são trafegados dados enviados pelo cliente para serem recebidos pelo servidor, normalmente utilizado para dados mais estruturados e em requisições POST, PUT or PATCH.
+O tipo de dado enviado pelo body deve ser o mesmo especificado no Content-Type, por exemplo, application/json.
+
+As partes que podem compor a resposta são:
+    Status da resposta, que contém a versão HTTP utilizada, o código de status e a mensagem de status. Por exemplo, HTTP/1.1 200 OK.
+    Headers ou cabeçalhos, com informações adicionais sobre a resposta ou o conteúdo da resposta. Por exemplo:
+        Content-Type;
+        Content-Length, que corresponde ao tamanho em bytes do corpo da resposta;
+        Cache-Control, que são as instruções de cache para a resposta;
+        Set-Cookie, que adiciona um valor de cookie ao navegador. Caso queira saber mais, confira este artigo sobre o que são cookies e como são utilizados.
+    Body, o corpo da resposta, que contém os dados ou o conteúdo solicitado pelo cliente através da requisição e enviado pelo servidor. O formato de dados do body vai depender do formato especificado em Content-Type, por exemplo JSON.
+
+Agora vou criar uma rota para retornar um JSON de livros dentro do app.js.
+
+app.js:
+const livros = [
+{	"id": 1,
+	"nome": "O Grande Gatsby"
+},{
+	"id": 2,
+	"nome": "Diário de um banana"
+}];
+//e, após o final do app.get da rota base, crio essa outra nova rota:
+app.get("/livros", (req, res) => {
+	res.status(200).json(livros);	
+});
+
+Para criar uma rota de inserção de livros:
+app.js:
+app.post("/livros", (req, res) => {
+	livros.push(req.body); // body também é propriedade de req, 
+	res.status(201).send("Livro cadastrado com sucesso!") // Toda requisição precisa de uma reposta. 201 significa registro criado com sucesso.
+};
+// já lá em cima, após o const app = express(), preciso criar um middleware:
+app.use(express.json());
+// isso permitirá executar o express.json() em todas as requisições manejadas pelo express.
+// agora, qualquer requisição que tenha como body um objeto compatível com json passará por esse middleware e será convertido para json.
+// isso é necessário, pois os dados que chegam pelo body, vêm em formato string, e preciso converter a string para, novamente ser um json.
+
+
+Toda requisição de head. O GET não precisa body, mas o POST sim, pois precisamos dizer quais os dados a inserir.
+Para testar, não pode ser pelo navegador, pois ele só faz GET. Usarei o postman, colocando em POST, na rota /livros, no Body da requisição usarei raw, e, marco, no lado direito ao "raw", que trata-se de JSON (application/json):
+localhost:3000/livros
+body: 
+{
+	"id": 3,
+	"nome": "Minha Luta"
+}
+
+
+
+Para adicionar uma rota de consulta de apenas 1 livro, utilizo a rota /livros/:id. Esse : significa que o id na url é um parâmetro id, que será o id do livro que quero consultar.
+Devo criar, portanto, antes das rotas, uma função que pegará esse parâmetro id e irá consultar.
+Para passar essa requisição com parâmetro na URL, utilizo o req.params.id na chamada da função.
+const buscaLivro = (id) => {
+    for (const livro of livros) {
+        if (livro.id === Number(id)) {
+            return livro;
+        }
+    }
+    return null; // caso não exista o id
+}
+...
+app.get("/livros/:id", (req, res) => {
+    const livro = buscaLivro(req.params.id);
+    if (livro) {
+        res.status(200).json(livro);
+    }
+    else {
+        res.status(404).send({ error: "Livro não encontrado!" })
+    }
+}) 
+
+Ou, de uma forma mais rebuscada:
+
+const buscaIndex = (id) => {
+    const index = livros.findIndex(livro => livro.id === Number(id));
+    return index;
+}
+
+app.get("/livros/:id", (req, res) => {
+	const index = buscaIndex(req.params.id);
+	res.status(200).json(livros[index]);
+});
+
+
+Para alterar, utilizarei a mesma função que busca o index para achar o livro, e enviar as novas informações a partir do body de um PUT.
+app.put("livros/:id", (req, res) => {
+	const index = buscaLivro(req.params.id);
+	livros[index].nome = req.body.nome;
+	res.status(200).json(livros);
+})
+
+
+Para deletar, o princípio é o mesmo, mas devo tomar alguns cuidados.
+A função findIndex retorna -1, quando falso.
+O método splice(index, 1) apaga 1 index, na posição indicada. Mas, quando index = -1, apaga o último elemento do array.
+Se eu não fizer um if, quando um findIndex der falso, terei o último elemento do array excluído.
+
+app.delete("/livros/:id", (req, res) => {
+    const index = buscaIndex(req.params.id);
+    if (index !== -1) {
+        livros.splice(index, 1);
+        res.status(200).json(livros);
+    }
+    else {
+        res.status(404).send({ error: "Livro não encontrado!" })
+    }
+});
+
+
+CRUD completo
+
+
+Agora, ver a criação de rotas com o express, a organização do código e como estruturar os diretórios.
+
+
+
+REORGANIZANDO O CÓDIGO
+Reorganizo as requisições e respostas, limpando o app.js
+
+CRIANDO MODELOS
+Os models são responsáveis pela representação dos dados e da lógica de negócio da aplicação, ou seja, 
+é responsabilidade do model gerenciar o relacionamento entre a API e a camada de dados, incluindo validação, 
+armazenamento e manipulação dos dados, interação com a base de dados e suas regras.
+A sintaxe aqui irá depender da biblioteca e framework utilizado.
+
+No /src crio um diretório /models, dentro crio um Livro.js
+Criarei um modelo para qualquer livro que entre no Banco.
+Modelo é um objeto que representa uma coleção no BD. (No Mongo trato assim)
+Criarei um Schema, que define a estrutura e propriedades de um documento livro.
+Ou seja, é uma interface para que a API interaja com os documentos de uma coleção.
+O modelo fornece à API todos os métodos que podemos fazer com o CRUD: GET, POST, etc
+Livro.js:
+import mongoose from "mongoose";
+const livroSchema = new mongoose.Schema({
+	id: { type: mongoose.Schema.Types.ObjectId },
+	titulo: { type: String, required: true }, // mongoose.Schema.Types.ObjectId é o mesmo que String
+	editora: { type: String },
+	preco: { type: Number },
+	paginas: { type: Number }
+},	{ versionKey: false } // não quero versionar o Schema
+);
+
+const livro = mongoose.model("livros", livroSchema); // livros é a coleção, criada no BD MongoDB
+
+export default livro;
+
+No app.js, importo Livro.js
+No app.get chamo o modelo.
+app.js:
+app.get("/livros", async (req, res) => { // agora é async, pois utilizo o await
+	const listaLivros = await livro.find({}); //find é um método do mongoose. Vai buscar todos os livros no BD.
+	res.status(200).json(listaLivros);
+});
+
+Instalo o dotenv, pois irei mexer com as variáveis de ambiente, para impedir certos dados sensíveis de irem para o git.
+> npm install dotenv
+
+Crio um arquivo na raiz chamado .env, nele colocarei as variáveis de ambiente (informações sensíveis)
+.env:
+DB_CONNECTION_STRING = blablabla.mysql.com/AMdsvSDKVDSKmk
+
+.gitignore:
+node_modules
+.env
+
+Importo o dotenv no local mais externo do projeto, server.js, na linha 1
+import "dotenv/config";
+
+No dbConnect.js, na async function conectaNaDatabase() 
+mongoose.connect(process.env.DB_CONNECTION_STRING);
+return mongoose.connection;
+
+CRIANDO CONTROLLERS
+Os controllers atuam como intermediários entre a camada responsável pelo recebimento dos inputs de dados, que em nossa API está sendo feito através das rotas, e os models.
+Controllers também são a camada responsável pelo “caminho inverso”, pegando o resultado do processamento feito pelos models e “repassando” de volta.
+No /src crio um diretório /controllers. Crio um arquivo livroController.js
+Centralizo a lógica das ações que podem ser feitas para as operações em livros
+
+livroController.js:
+import livro from "../models/Livro.js";
+
+class LivroController {
+	//getall, vou tirar do app.get do app.js
+	static async listarLivros (req, res) { //static pois quero usar métodos sem instanciar a classe. Não quero precisar antes new LivroController etc
+		const listaLivros = await livro.find({});
+		res.status(200).json(listaLivros);
+	}
+
+}
+
+export default LivroController
+
+
+Crio dentro de /src o /routes, para gerenciar as rotas. Dentro, livrosRoutes.js
+livrosRoutes.js:
+import express from "express";
+import LivroController from "../controllers/livroController.js";
+
+const routes = express.Router();
+
+// tiro a chamada da rota do app.get em app.js
+routes.get("/livros", LivroController.listarLivros);
+export default  routes;
+
+
+Para melhorar, vou centralizar as rotas em um arquivo index.js em /routes.
+Logo, vou tirar as rotas de app.js, e importar o routes index.js
+app.js
+//abaixo de const conexao, conexao.on e conexao.once
+const app = express();
+routes(app); // ap invés de app.use(express.json();
+
+index.js em /routes:
+import express from "express":
+import livros from "./livrosRoutes.js";
+
+const routes = (app) => { //app vem lá de app.js, que está trazendo o routes(app) que instancia o servidor express
+	app.route("/").get((req, res) => res.status(200).send("Exemplo de send"));
+	app.use(express.json(), livros);
+};
+export default routes;

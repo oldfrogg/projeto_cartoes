@@ -1,0 +1,286 @@
+Senha conexão mysql: martin2022
+
+Instalo o Uniform Server Zero, executo, crio uma senha, e starto um server SQL.
+ou
+Instalo o MySQL Server, executo, crio uma senha e o inicio.
+> sc query mysql84 (verifico o estado do sql server, se está executando. 84 pq instalei a versão 8.4)
+
+Ao reiniciar o PC:
+> net start mysql84 (inicio o servidor)
+> net stop mysql84 (paro o servidor)
+
+mysql.exe (sem o “d”) é um cliente de terminal para enviar comandos manualmente.
+mysqld.exe (com “d” no final) é o daemon do MySQL — o processo que realmente roda, escuta na porta (normalmente 3306) e gerencia bancos de dados, tabelas, conexões e transações.
+MAS NÃO OS EXECUTO! INICIO O SQL SERVER PELO TERMINAL, COM NET START
+
+Minha instalação do MySQL Server estará em:
+C:\Program Files\MySQL\MySQL Server 8.4\bin
+
+Meus bancos de dados estarão em:
+C ou D:\ProgramData\MySQL\MySQL Server 8.4\Data
+
+
+Instalo o MySQL Workbench, crio uma nova conexão ou entro em uma criada e utilizo a senha de acesso ao servidor criada
+
+No Workbench, na query 1 escrevo CREATE SCHEMA PROJETO_CARTOES
+Executo selecionando esse código e clicando no raio
+No menu esquerdo, logo abaixo, clico em "Schemas", clico com o botão esquerdo no menu esquerdo e dou um "refresh"
+O Schema criado irá aparecer. Esse Schema irá guardar todas as tablelas criadas.
+
+Dou duplo clique no schema projeto_cartoes (ele ficará em negrito), para que o workbench entenda que minhas execuções serão nesse schema.
+Ou, melhor ainda, defino na query USE db_nome, pois, assim, posso exportar esse .sql, que, ao importar, não terá erro de não ter um DB selecionado.
+
+
+Crio a tabela de cliente:
+CREATE TABLE CLIENTES (
+ID INT AUTO_INCREMENT PRIMARY KEY,
+NOME VARCHAR(100) NOT NULL,
+CPF VARCHAR(11) UNIQUE NOT NULL,
+EMAIL VARCHAR(50) NOT NULL,
+NASCIMENTO DATE NOT NULL,
+);
+
+Se precisar de algum decimal, indico o total de caracteres, exprimindo a quantidade de decimais.
+Ex: preço até 999,99: PRECO_ITEM DECIMAL(5,2)
+
+Crio a tabela de cartões
+
+CREATE TABLE CARTOES (
+ID INT AUTO_INCREMENT PRIMARY KEY,
+TIPO ENUM('CREDITO', 'DEBITO', 'MULTIPLO', 'PRE_PAGO') NOT NULL,
+MODALIDADE VARCHAR(16) NOT NULL,
+ANUIDADE DECIMAL(5,2) NOT NULL,
+BANDEIRA VARCHAR(16) NOT NULL,
+SEGMENTO VARCHAR(16) NOT NULL,
+);
+
+Segmento é para informar o tipo de cliente, por ex: Estilo, Private, Empresarial, etc
+
+Poderia também ter incluído uma coluna para mostrar se tal cartão está em comercialização, ou não.
+Seria um boleano, com valor 0 ou 1:
+STATUS BOOL
+Isso, na verdade, será lido como STATUS TINYINT(1), que eu poderia utilizar também.
+
+Crio a tabela de contratação, contendo id, id do cliente, id do cartão, data da contratação e o status (ativo/inativo)
+
+CREATE TABLE CONTRATACOES (
+ID INT AUTO_INCREMENT PRIMARY KEY,
+CLIENTE_ID INT NOT NULL,
+CARTAO_ID INT NOT NULL,
+DATA_CONTRATACAO DATE NOT NULL,
+STATUS ENUM('ATIVO', 'INATIVO') NOT NULL,
+
+FOREIGN KEY (CLIENTE_ID) REFERENCES CLIENTES(ID) ON DELETE NO ACTION ON UPDATE CASCADE,
+FOREIGN KEY (CARTAO_ID) REFERENCES CARTOES(ID) ON DELETE NO ACTION ON UPDATE CASCADE
+);
+
+Se eu quiser excluir um BD, utilizo DROP DATABASE. Ex:
+DROP DATABASE PROJETO_CARTOES;
+
+Se eu quisesse alterar uma tabela, por exemplo, usaria o ALTER TABLE,
+aí temos exemplos como ADD_CONSTRAINT (adicionar restrição), etc.
+
+Para inserir dados nas tabelas utilizo INSERT INTO... VALUES...
+Porém, as chaves estrangeiras devem estar desabilitadas, para isso, executo:
+
+SET FOREIGN_KEY_CHEKS = 0;
+Agora as tabelas não estão relacionadas e as chaves estrangeiras estão desativadas.
+
+Agora sim...
+INSERT INTO CLIENTES (nome, cpf, email, nascimento) VALUES (
+'Jhonatta',
+'12345678900',
+'jhonatta@hotmail.com',
+'2000-01-01'
+),
+(
+'Martin',
+'00987654321',
+'martin@hotmail.com',
+'2020-01-01'
+);
+
+Utilizar sempre aspas simples, pois em alguns SGBD só assim é válido.
+
+Exemplos de consultas de dados:
+SELECT * FROM CLIENTES;
+SELECT NOME FROM CLIENTES;
+SELECT NOME AS 'NOME DO CLIENTE' FROM CLIENTES;
+SELECT NOME FROM CLIENTES WHERE ID > 1;
+SELECT NOME FROM CLIENTES WHERE CPF = '12345678900';
+SELECT CARTAO FROM CARTOES WHERE TIPO NOT 'DEBITO' AND ANUIDADE > 50.00;
+SELECT CIDADE, ESTADO FROM MAPA WHERE CIDADE = 'Uberlândia' OR CIDADE = 'Analândia';
+SELECT CIDADE, ESTADO FROM MAPA WHERE CIDADE LIKE '%LÂNDIA';
+// Esse mostrará cidades que terminam com "Lândia"
+SELECT CIDADE, ESTADO FROM MAPA WHERE CIDADE LIKE '%CAJ%';
+// Esse mostrará cidades que tem "CAJ" no meio do nome.
+SELECT DISTINCT * FROM CONTRATACOES WHERE ID_CLIENTE = 1;
+// Mostra o cliente apenas uma vez (caso haja), mesmo que ele tenha contratado vários cartões.
+
+DELETE FROM CLIENTES WHERE ID = 1;
+// Deleta da tabela o cliente de Id 1
+UPDATE LIVROS SET PRECO = 0.9*PRECO.
+// Atualiza o preço de livros, deixando-os com 10% de desconto.
+
+SELECT CLIENTES.NOME, CARTOES.MODALIDADE FROM CLIENTES, CARTOES, CONTRATACOES WHERE CLIENTES.ID = CONTRATACOES.ID_CLIENTE;
+SELECT CLIENTES.NOME, CARTOES.MODALIDADE JOIN CLIENTES ON CONTRATACOES.CLIENTE_ID = CLIENTES.ID JOIN CARTOES ON CONTRATACOES.CARTAO_ID = CARTOES.ID;
+
+Aprender SUM e GROUP BY
+
+
+Se eu quiser adicionar uma coluna em uma tabela existente, posso utilizar o ALTER TABLE.
+Por exemplo, adicionarei uma coluna LIMITE na tabela CLIENTES, para guardar o limite disponível para o cliente.
+ALTER TABLE CLIENTES ADD LIMITE DECIMAL(8,2) DEFAULT 0.00;
+
+Se eu quiser alterar o limite de algum cliente, com a coluna já criada, posso utilizar:
+UPDATE CLIENTES SET LIMITE = 2500.00 WHERE ID = 1;
+
+Se eu quiser saber a média, por ex, de quanto cada cliente gasta de aluguel no airbnb:
+SELECT cliente_id, AVG(preco_total) AS ticket_medio FROM alugieis GROUP BY cliente_id;
+
+Se eu quiser saber a média de dias de cada reserva:
+SELECT cliente_id, AVG(DATEDIFF(data_fim, data_inicio)) AS media_dias_estadia FROM alugueis GROUP BY cliente_id ORDER BY media_dias_estadia DESC;
+DATEDIFF traz a diferença em dias entre uma data inicial e uma data final
+
+Se eu quiser calcular o preço médio de preço de vendas de um produto do último ano corrido:
+SELECT produto_id, AVG(preco_venda) AS preco_medio
+FROM vendas
+WHERE data_venda BETWEEN DATE_SUB(CURDATE(), INTERVAL 1 YEAR) AND CURDATE()
+GROUP BY produto_id;
+
+Se eu quiser calcular o do ano anterior, meu WHERE seria:
+WHERE YEAR(data_venda) = YEAR(CURDATE()) - 1
+
+BETWEEN: Este operador é usado para selecionar valores dentro de um intervalo. Ele inclui os valores de início e fim do intervalo.
+DATE_SUB(CURDATE(), INTERVAL 1 YEAR): Esta função calcula a data de um ano atrás a partir da data atual.
+    CURDATE(): Retorna a data atual.
+    DATE_SUB(): Subtrai um intervalo de tempo de uma data.
+    INTERVAL 1 YEAR: Especifica o intervalo de tempo a ser subtraído, que é de 1 ano.
+AND CURDATE(): Este é o limite superior do intervalo, ou seja, a data atual.
+
+
+Consulta para encontrar os 10 perfis de proprietários com mais hospedagens ativas na plataforma.
+
+
+SELECT p.nome AS nome_proprietario, COUNT(h.hospedagem_id) AS total_hospedagens_ativas
+FROM proprietarios p
+JOIN hospedagens h ON p.proprietario_id = h.proprietario_id
+WHERE h.ativo = 1
+GROUP BY p.nome
+ORDER BY total_hospedagens_ativas DESC
+LIMIT 10;
+
+Para identificar o número de hospedagens inativas por proprietário:
+
+
+SELECT p.nome AS nome_proprietario, COUNT(*) AS total_hospedagens_inativas
+FROM proprietarios p
+JOIN hospedagens h ON p.proprietario_id = h.proprietario_id
+WHERE h.ativo = 0
+GROUP BY p.nome;
+
+ON p.proprietario_id = h.proprietario_id especifica que as linhas das duas tabelas devem ser combinadas onde o proprietario_id na tabela de proprietarios é igual ao proprietario_id na tabela de hospedagens.
+
+O comando JOIN na linguagem SQL é ferramenta usada para combinar linhas de duas ou mais tabelas, baseando-se em uma coluna relacionada entre elas
+    INNER JOIN: Retorna linhas quando há pelo menos uma correspondência em ambas as tabelas.
+    LEFT JOIN (ou LEFT OUTER JOIN): Retorna todas as linhas da tabela à esquerda e as linhas correspondentes da tabela à direita. Se não houver correspondência, o resultado é NULL no lado direito.
+    RIGHT JOIN (ou RIGHT OUTER JOIN): O inverso do LEFT JOIN, retorna todas as linhas da tabela à direita e as correspondentes da tabela à esquerda.
+    FULL OUTER JOIN: Combina LEFT JOIN e RIGHT JOIN, retornando todas as linhas quando há uma correspondência em uma das tabelas.
+Embora o FULL OUTER JOIN não seja diretamente suportado pelo MySQL, é possível simular esse comportamento combinando LEFT JOIN e RIGHT JOIN com UNION.
+
+Para analisar os dados de aluguéis para identificar os meses com maior e menor demanda:
+SELECT YEAR(data_inicio) AS ano, MONTH(data_inicio) AS mes, COUNT(*) AS total_alugueis
+FROM alugueis
+GROUP BY ano, mes
+ORDER BY total_alugueis DESC;
+
+Para adicionar uma coluna incluindo a quantidade de hospedagens que cada proprietário tem
+ALTER TABLE proprietarios
+ADD COLUMN qtd_hospedagens INT;
+
+Para renomear o nome de uma tabela:
+ALTER TABLE alugueis RENAME TO reservas;
+
+Para renomear uma coluna:
+ALTER TABLE reservas RENAME COLUMM aluguel_id TO reserva_id
+
+Para excluir uma coluna:
+ALTER TABLE tabela DROP COLUMN coluna;
+
+Para alterar o tipo de dado de uma coluna:
+ALTER TABLE tabela MODIFY COLUMN coluna NOVO_TIPO_DE_DADO;
+
+Para adicionar uma chave primária:
+ALTER TABLE tabela ADD PRIMARY KEY (coluna);
+
+Para remover uma chave primária, permitindo alterações na estrutura de dados, antes restritas:
+ALTER TABLE tabela DROP PRIMARY KEY;
+
+Para adicionar  um índice em uma ou mais colunas para melhorar a performance de consultas:
+ALTER TABLE tabela ADD INDEX nome_do_indice (coluna);
+
+Para remover um índice:
+ALTER TABLE tabela DROP INDEX nome_do_indice;
+
+Para adicionar chaves estrangeiras:
+ALTER TABLE tabela ADD CONSTRAINT fk_nome_da_chave FOREIGN KEY (coluna) REFERENCES outra_tabela (coluna);
+
+Para atualizar o status de uma hospedagem, transformando-a em ativa:
+UPDATE hospedagens
+SET ativo = 1
+WHERE hospedagem_id IN ('1','15','63');
+
+Para deletar dados, excluir hospedagens:
+DELETE FROM hospedagens
+WHERE hospedagem_id IN ('48', '75');
+Se estiver como chave estrangeira em outra tabela, será necessário ANTES excluir desse outro local.
+DELETE FROM avaliacoes
+WHERE hospedagem_id IN ('48', '75');
+
+Caso eu já tenha configurado antes, não é necessário apagar dos outros locais:
+    RESTRICT: Impede a exclusão do registro na tabela pai se existirem registros relacionados na tabela filha. Esta é a configuração padrão.
+    CASCADE: Ao deletar um registro na tabela pai, todos os registros relacionados na tabela filha também são deletados automaticamente.
+    SET NULL: Ao deletar um registro na tabela pai, os valores das chaves estrangeiras nos registros relacionados da tabela filha são definidos como NULL.
+    NO ACTION: Semelhante a RESTRICT, mas a verificação é adiada até o final da transação.
+
+
+
+DELETE só serve para dados dentro da tabela. Para apagar tabelas ou o BD, utilizo o DROP:
+DROP SCHEMA (ou DATABASE) nome_da_tabela;
+DROP TABLE nome_da_tabela;
+
+Agregações:
+    MAX: a partir de um conjunto de valores é retornado o maior entre eles;
+    MIN: analisa um grupo de valores e retorna o menor entre eles;
+    SUM: calcula o somatório dos valores de um campo específico;
+    AVG: realiza a média aritmética dos valores de uma determinada coluna; e
+    COUNT: contabiliza a quantidade de linhas selecionadas.
+
+
+O nome de todos os livros e a quantidade vendida de cada um:
+SELECT LIVROS.NOME_LIVRO, VENDAS.QTD_VENDIDA
+FROM LIVROS
+LEFT JOIN VENDAS
+ON LIVROS.ID_LIVRO = VENDAS.ID_LIVRO;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,9 @@
+- Trabalhar com Herança, para que as chamadas não fiquem tão repetitivas. Fazer classes genéricas que chamem funções repetitivas que usarei em cada tabela, como a função getAll()
+- Fazer funções para o uso do cartão, adicionando 'limite_disponivel' ao Cliente atualizando o limite disponível do cliente ao utilizar o cartão.
+- Fazer mais validações e criar erros específicos, melhorando a manutenção e legibilidade do código e fornecendo melhores informações de erros ao usuário e ao desenvolvedor.
+- Verificar a possibilidade de utilizar migrations
+
+
+
+
+

@@ -1,0 +1,16 @@
+CAMADAS
+Repositórios: Lida com o BD. Executa o CRUD usando Sequelize.
+	Serve para isolar a lógica de acesso ao BD.
+	Se eu quiser alterar o SGBD futuramente, só irei mexer nessa camada.
+
+Serviços: Regras de negócio.
+	Valida dados antes de salvar.
+	Chama os repositórios para executar as operações.
+	Serve para deixar o controller mais limpo, sem lógicas complexas e longas.
+	Facilita testes unitários.
+
+Controlador: Recebe a req HTTP, chama o service e retorna a resp.
+
+
+Para instalar as dependências necessárias:
+> npm i
