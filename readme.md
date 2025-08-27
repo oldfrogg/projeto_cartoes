@@ -20,14 +20,15 @@ O modelo DER utilizado no projeto está na raiz desse projeto, no arquivo "DER.P
 ## Instalando o projeto
 
 ### 1 - Clonando o repositório
-- Clonar através do
+- Caso tenha o git instalado e configurado nas variáveis de ambiente do sistema, clonar através do
 ```bash
 git clone https://github.com/oldfrogg/projeto_cartoes
 cd projeto-cartoes
 ```
+- Também é possível fazer o download do projeto diretamente através do Github.
 
 ### 2 - Instalando as dependências
-- Instalar as dependências necessárias:
+- Abrir o diretório do arquivo através do terminal e instalar as dependências necessárias:
 
 ```bash
 npm install
@@ -106,6 +107,7 @@ O projeto foi desenvolvido por Jhonatta Tavares.
 ## Licença
 
 Licença MIT, portanto, é de livre uso, alteração e publicação.
+
 
 
 
