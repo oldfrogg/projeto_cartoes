@@ -25,6 +25,24 @@ Lembrar de, a cada instalação que altere as variáveis de ambiente do sistema,
 - Baixe o MySQL Server no [site oficial do MySQL](https://dev.mysql.com/downloads/), de acordo com seu Sistema Operacional, na versão completa (maior arquivo). Instale-o e configure-o, inclusive nas variáveis de ambiente do sistema.
 Lembrar de deixar (ou inserir) porta 3306. O usuário e senha aqui devem ser anotados, para uso nos próximos passos.
 
+No CMD do Windows, caso precise parar o MySQL server, execute o comando:
+```bash
+net stop mysql80
+```
+
+No Linux, usando o systemctl:
+```bash
+sudo systemctl stop mysql
+```
+
+No MacOS, usando o Homebrew:
+```bash
+brew services stop mysql
+```
+
+Para iniciar novamente, basta trocar o "stop" por "start".
+
+
 ### 2 - Clonando o repositório
 - Caso tenha o git instalado e configurado nas variáveis de ambiente do sistema, clonar através do
 ```bash
@@ -110,6 +128,7 @@ O projeto foi desenvolvido por Jhonatta Tavares.
 ## Licença
 
 Licença MIT, portanto, é de livre uso, alteração e publicação.
+
 
 
 
