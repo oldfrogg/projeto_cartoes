@@ -4,6 +4,10 @@ A API a seguir é uma uma API RESTful desenvolvida para cumprimento de um projet
 O projeto foi desenvolvido utilizando Node.JS, Express e Sequelize.
 A documentação está disponível via Swagger.
 
+---
+
+O modelo DER utilizado no projeto está na raiz desse projeto, no arquivo "DER.PNG"
+
 ## Pré-requisitos
 - Node.JS 20.9.0
 - NPM (Já está incluso no Node.JS)
@@ -71,30 +75,30 @@ http://localhost:3000/api-docs/
 ## Rotas
 
 ### Interface da Documentação
-/api-docs
+- /api-docs
 
 ### CLIENTES
-GET - /clientes/ - Listar todos os clientes
-GET - /clientes/:id - Mostrar um cliente específico a partir de seu ID
-POST - /clientes/criar_cliente" - Criar um cliente
-PUT - /clientes/atualizar_cliente/:id - Atualizar um cliente existente a partir do seu ID
-DELETE - /clientes/deletar_cliente/:id - Deletar um cliente do BD
+- /clientes/ - GET - Listar todos os clientes
+- /clientes/:id - GET - Mostrar um cliente específico a partir de seu ID
+- /clientes/criar_cliente" - POST - Criar um cliente
+- /clientes/atualizar_cliente/:id - PUT - Atualizar um cliente existente a partir do seu ID
+- /clientes/deletar_cliente/:id - DELETE - Deletar um cliente do BD
 
 ### CARTÕES
-GET - /cartoes/ - Listar todos os cartões
-GET - /cartoes/:id - Mostrar um cartão específico a partir de seu ID
-POST - /cartoes/criar_cartao - Criar um cartão 
-PUT - /cartoes/editar_cartao/:id - Editar um cartão a partir do seu ID
-PUT - /cartoes/desativar_cartao/:id - Desativar um cartão (para novas contratações) a partir do seu ID
-DELETE - /cartoes/deletar_cartao/:id - Excluir um cartão do BD a partir do seu ID
+- /cartoes/ - GET - Listar todos os cartões
+- /cartoes/:id - GET - Mostrar um cartão específico a partir de seu ID
+- /cartoes/criar_cartao - POST - Criar um cartão 
+- /cartoes/editar_cartao/:id - PUT - Editar um cartão a partir do seu ID
+- /cartoes/desativar_cartao/:id - PUT - Desativar um cartão (para novas contratações) a partir do seu ID
+- /cartoes/deletar_cartao/:id - DELETE - Excluir um cartão do BD a partir do seu ID
 
 ### CONTRATAÇÕES
-GET - /contratacoes/ - Listar todas as contratações
-GET - /contratacoes/:id - Mostra uma contratação específica a partir do seu ID
-POST - /contratacoes/fazer_contratacao - Faz uma nova contratação
-PUT - /contratacoes/cancelar_contratacao/:id - Cancela uma contratação
-GET - /contratacoes/contratacoes_cliente/:cliente_id - Mostra todas as contratações já efetuadas por um cliente a partir de seu ID
-GET - /contratacoes/cartoes_ativos_cliente/:cliente_id - Mostra todas as contratações ativas de um cliente a partir de seu ID
+- /contratacoes/ - GET - Listar todas as contratações
+- /contratacoes/:id - GET - Mostra uma contratação específica a partir do seu ID
+- /contratacoes/fazer_contratacao - POST - Faz uma nova contratação
+- /contratacoes/cancelar_contratacao/:id - PUT - Cancela uma contratação
+- /contratacoes/contratacoes_cliente/:cliente_id - GET - Mostra todas as contratações já efetuadas por um cliente a partir de seu ID
+- /contratacoes/cartoes_ativos_cliente/:cliente_id - GET - Mostra todas as contratações ativas de um cliente a partir de seu ID
 
 ## Autor
 O projeto foi desenvolvido por Jhonatta Tavares.
@@ -102,4 +106,5 @@ O projeto foi desenvolvido por Jhonatta Tavares.
 ## Licença
 
 Licença MIT, portanto, é de livre uso, alteração e publicação.
+
 
