@@ -19,7 +19,13 @@ O modelo DER utilizado no projeto está na raiz desse projeto, no arquivo "DER.P
 
 ## Instalando o projeto
 
-### 1 - Clonando o repositório
+Lembrar de, a cada instalação que altere as variáveis de ambiente do sistema, reiniciar o terminal e/ou o editor.
+
+### 1 - Instalando e configurando o MySQL Server
+- Baixe o MySQL Server no [site oficial do MySQL](https://dev.mysql.com/downloads/), de acordo com seu Sistema Operacional, na versão completa (maior arquivo). Instale-o e configure-o, inclusive nas variáveis de ambiente do sistema.
+Lembrar de deixar (ou inserir) porta 3306. O usuário e senha aqui são os mesmos do passo anterior.
+
+### 2 - Clonando o repositório
 - Caso tenha o git instalado e configurado nas variáveis de ambiente do sistema, clonar através do
 ```bash
 git clone https://github.com/oldfrogg/projeto_cartoes
@@ -27,14 +33,14 @@ cd projeto-cartoes
 ```
 - Também é possível fazer o download do projeto diretamente através do Github.
 
-### 2 - Instalando as dependências
+### 3 - Instalando as dependências
 - Abrir o diretório do arquivo através do terminal e instalar as dependências necessárias:
 
 ```bash
 npm install
 ```
 
-### 3 - Criando o arquivo .env na raiz do projeto
+### 4 - Criando o arquivo .env na raiz do projeto
 - Abra o projeto no editor de sua preferência, e, na raiz do projeto, crie um arquivo ".env" e insira as variáveis de ambiente, conforme sua escolha:
 ```env
 DB_HOST=localhost
@@ -46,15 +52,12 @@ PORT=3000
 ```
 
 Atenção! O nome do BD deve ser exatamente "PROJETO_CARTOES" (sem aspas), pois é o nome utilizado no comando SQL de criação do BD.
-
-### 4 - Instalando e configurando o MySQL Server
-- Baixe o MySQL Server versão 8.4.6 no https://www.mysql.com/downloads, instale-o e configure-o.
-Lembrar de deixar (ou inserir) porta 3306 e anotar a senha cadastrada para o root.
+Atenção! Seu usuário e senha definidos aqui devem ser os mesmos do próximo passo.
 
 ### 5 - Criando o BD
-- No terminal, estando na raiz do projeto, execute o seguinte comando para criar o BD:
+- No terminal, estando na raiz do projeto, execute o seguinte comando para criar o BD. Pode ser solicitado a senha criada anteriormente:
 ```bash
-mysql -u root -p PROJETO_CARTOES < ./src/config/criarbd.sql
+mysql -u root -p < ./src/config/criarbd.sql
 ```
 
 ### 6 - Verificações no package.json
@@ -107,6 +110,7 @@ O projeto foi desenvolvido por Jhonatta Tavares.
 ## Licença
 
 Licença MIT, portanto, é de livre uso, alteração e publicação.
+
 
 
 
