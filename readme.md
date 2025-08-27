@@ -22,7 +22,7 @@ O modelo DER utilizado no projeto está na raiz desse projeto, no arquivo "DER.P
 ### 1 - Clonando o repositório
 - Clonar através do
 ```bash
-git clone https://github.com/oldfrogg/projeto-cartoes
+git clone https://github.com/oldfrogg/projeto_cartoes
 cd projeto-cartoes
 ```
 
@@ -106,5 +106,6 @@ O projeto foi desenvolvido por Jhonatta Tavares.
 ## Licença
 
 Licença MIT, portanto, é de livre uso, alteração e publicação.
+
 
 
