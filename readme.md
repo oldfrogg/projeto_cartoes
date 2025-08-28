@@ -27,8 +27,10 @@ Lembrar de deixar (ou inserir) porta 3306. O usuário e senha aqui devem ser ano
 
 No CMD do Windows, caso precise parar o MySQL server, execute o comando:
 ```bash
-net stop mysql80
+net stop mysql84
 ```
+
+Talvez seja necessário utilizar mysql80, a depender de sua versão instalada e SO.
 
 No Linux, usando o systemctl:
 ```bash
@@ -128,6 +130,7 @@ O projeto foi desenvolvido por Jhonatta Tavares.
 ## Licença
 
 Licença MIT, portanto, é de livre uso, alteração e publicação.
+
 
 
 
